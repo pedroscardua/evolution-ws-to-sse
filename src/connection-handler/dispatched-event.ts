@@ -5,6 +5,7 @@ export interface DispatchedEvent {
   fromMe: boolean
   remoteJid: string
   type: string
+  Servertype: string
   conversation: string | null
   timestampz: string
   keyid: string
@@ -32,7 +33,7 @@ const normalizeMimeType = (data: any): string | null => {
 }
 
 const normalizedMediaURL = (data: any): string => {
-  return data.data.message.mediaUrl ||
+  return data?.data?.message?.mediaUrl ||
     `https://s3.servidor1.appfollow.com.br/${
       data.server_url.includes('bot2.')
         ? 'evolutionv20102'
@@ -51,21 +52,55 @@ const normalizedMediaURL = (data: any): string => {
     }`
 }
 
+const mapEventType = (eventType: string): string => {
+  const eventMap: Record<string, string> = {
+    'message': 'message',
+    'send.message': 'message',
+    'presence.update': 'presence',
+    'messages.upsert': 'message'
+  }
+
+  return eventMap[eventType] || eventType
+}
+
 export const convertToDispatchedEvent = (data: any): DispatchedEvent => {
   // Aqui, você usa a função normalizedMediaURL e armazena o resultado em uma variável.
-  const mediaurl = normalizedMediaURL(data)
 
-  return {
-    id_msg: data.data.id,
-    fromMe: data.data.key.fromMe,
-    remoteJid: data.data.key.remoteJid,
-    type: data.data.messageType,
-    conversation: data.data.message?.conversation || null,
-    timestampz: new Date(data.data.messageTimestamp * 1000).toISOString(),
-    keyid: data.data.key.id,
-    instanceid: data.data.instanceId,
-    mimetype: normalizeMimeType(data.data),
-    bucketname: BUCKET_NAME,
-    mediaurl: mediaurl // ou, diretamente: mediaurl: normalizedMediaURL(data)
+  const servertype = mapEventType(data.data.Servertype)
+  if (servertype === 'message') {
+    console.log('Message data', data)
+    console.log('Message data.data', data.data)
+    const mediaurl = normalizedMediaURL(data)
+    return {
+      id_msg: data.data.id,
+      fromMe: data.data.key.fromMe,
+      remoteJid: data.data.key.remoteJid,
+      type: data.data.messageType,
+      Servertype: servertype,
+      conversation: data.data.message?.conversation || null,
+      timestampz: new Date(data.data.messageTimestamp * 1000).toISOString(),
+      keyid: data.data.key.id,
+      instanceid: data.data.instanceId,
+      mimetype: normalizeMimeType(data.data),
+      bucketname: BUCKET_NAME,
+      mediaurl: mediaurl
+    }
+  } else {
+    console.log('data', data)
+    console.log('data.data', data.data)
+    return {
+      id_msg: data.data.id,
+      fromMe: false,
+      remoteJid: data.data.id,
+      type: servertype,
+      Servertype: servertype,
+      conversation: null,
+      timestampz: new Date().toISOString(),
+      keyid: data.data.id,
+      instanceid: data.data.instanceId,
+      mimetype: null,
+      bucketname: BUCKET_NAME,
+      mediaurl: ''
+    }
   }
 }

@@ -105,6 +105,7 @@ class ConnectionHandler {
   /// handles incoming events from a socket connection
   #handleIncomingEvent (id: string, data: any) {
     const normalized = convertToDispatchedEvent(data)
+    console.log('normalized', normalized)
     this.#broadcastEvents(id, normalized)
   }
 
@@ -153,7 +154,7 @@ class ConnectionHandler {
       }
   
       try {
-        store.session.push(data);
+        store.session.push(data, data.Servertype);
         messagesSent.inc({ id });
       } catch (e) {
         console.error(e);

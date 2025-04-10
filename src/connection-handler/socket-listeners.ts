@@ -36,7 +36,11 @@ export class SocketListeners {
     return new Promise<boolean>((resolve) => {
       socket.onAny((event, ...args) => {
         this.onEvent(id, event)
-        handler(args[0])
+        const data = args[0]
+        if (data) {
+          data.data.Servertype = event
+        }
+        handler(data)
       })
 
       socket.on('connect', () => {
